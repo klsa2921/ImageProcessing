@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify
 import os
 from werkzeug.utils import secure_filename
-from process import process_images_and_get_extracted_text
+from process import process_file
+from flask_cors import CORS
 
 app = Flask(__name__)
+
+CORS(app)
 
 # Define allowed file extensions for security
 ALLOWED_EXTENSIONS = {'pdf', 'jpg', 'jpeg', 'png'}
@@ -32,7 +35,8 @@ def extract_text():
 
         try:
             # Call your existing method to process the image or pdf
-            extracted_text = process_images_and_get_extracted_text(filepath)
+            # extracted_text = process_images_and_get_extracted_text(filepath)
+            extracted_text=process_file(filepath)
             print(extracted_text)
             return jsonify({"text": extracted_text}), 200
 
@@ -46,8 +50,8 @@ if __name__ == "__main__":
     # Ensure uploads directory exists
     if not os.path.exists("uploads"):
         os.makedirs("uploads")
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+    app.run(debug=True,host="0.0.0.0", port=11200)
 
-    app.run(debug=True)
 
-
-#curl -X POST -F "file=@/home/klsa/Downloads/test.jpg" http://127.0.0.1:5000/extract_text
+#curl -X POST -F "file=@/home/ds1/ImageProcessing/arabic1.png" http://192.168.1.46:11201/extract_text

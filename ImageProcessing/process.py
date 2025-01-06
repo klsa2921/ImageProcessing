@@ -99,6 +99,36 @@ def extract_text_from_image_using_docling(image_path):
   return result.document.export_to_text()
 
 
+def process_file(file_path):
+    file_extension = os.path.splitext(file_path)[1].lower()
+    text=''
+    if file_extension=='.pdf':
+      images=pdf2image.convert_from_path(file_path)
+
+      for img in images:
+        img_np=np.array(img)
+        text+=extract_text(img_np)
+    elif file_extension in ['.jpg', '.jpeg', '.png', '.bmp', '.gif']:
+       img = Image.open(file_path)
+       text+=extract_text(img)
+    
+    return text
+      
+
+def extract_text(img):
+    text=''
+    try:
+        print("extracting text using tesseract")
+        text=extract_text_from_file_for_pytesseract(img)
+    except Exception as e:
+        print(f"Error processing  image (error: {str(e)} trying with easyocr")
+        try:
+            text=extract_text_from_file_using_easyocr(img)
+        except Exception as e:
+            print(f"Error processing  image (error: {str(e)} trying with docling")
+            text=extract_text_from_image_using_docling(img)
+    return text
+
 def process_images_and_get_extracted_text(file_path):
   try:
     print("extracting text using tesseract")
