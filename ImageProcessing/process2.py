@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 import pytesseract
 import easyocr
-from docling import DocumentConverter
+from docling.document_converter import DocumentConverter
 import pdf2image
 import os
 

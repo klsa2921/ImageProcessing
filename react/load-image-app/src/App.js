@@ -27,7 +27,7 @@ function FileUpload() {
     setOutput('');
 
     try {
-      const response = await axios.post('http://192.168.1.46:11201/extract_text', formData, {
+      const response = await axios.post('http://192.168.1.249:11200/extract_text', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

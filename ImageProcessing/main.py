@@ -1,7 +1,8 @@
+
 from flask import Flask, request, jsonify
 import os
 from werkzeug.utils import secure_filename
-from process import process_file
+from process2 import process_file
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -54,4 +55,4 @@ if __name__ == "__main__":
     app.run(debug=True,host="0.0.0.0", port=11200)
 
 
-#curl -X POST -F "file=@/home/ds1/ImageProcessing/arabic1.png" http://192.168.1.46:11201/extract_text
+#curl -X POST -F "file=@./arabic1.png" http://192.168.1.249:11200/extract_text
