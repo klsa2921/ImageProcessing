@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  python-api:
+    build:
+      context: ./ImageProcessing  
+    ports:
+      - "11200:11200"  
+    volumes:
+      - ./ImageProcessing:/app 
+    environment:
+      - FLASK_APP=main.py  
+    depends_on:
+      - react-frontend 
+
+  react-frontend:
+    build:
+      context: ./load-image-app  
+    ports:
+      - "3000:3000"  
+    volumes:
+      - ./load-image-app:/app  
+    environment:
+      - REACT_APP_API_URL=http://python-api:11200  
+    depends_on:
+      - python-api  

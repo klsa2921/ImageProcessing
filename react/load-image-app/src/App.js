@@ -9,11 +9,12 @@ function FileUpload() {
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
-    setOutput('');  // Clear the output when a new file is selected
-    setError('');  // Clear any previous error messages
+    setOutput('');  
+    setError('');  
   };
 
   const handleFileUpload = async () => {
+    console.log("method called")
     if (!file) {
       setError('Please select a file');
       return;
@@ -25,9 +26,11 @@ function FileUpload() {
     setLoading(true);
     setError('');
     setOutput('');
-
+    // http://192.168.1.249:11200/extract_text
     try {
-      const response = await axios.post('http://192.168.1.249:11200/extract_text', formData, {
+          
+      const response = await axios.post('http://192.168.1.27:11200/extract_text', formData, {
+        timeout: 50000,
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -35,12 +38,13 @@ function FileUpload() {
 
       setLoading(false);
       if (response.data.text) {
-        setOutput(response.data.text);  // Display only the extracted text
+        setOutput(response.data.text);  
       } else {
         setError('No text extracted from the file.');
       }
     } catch (err) {
       setLoading(false);
+      console.log(err);
       setError('Error uploading file. Please try again.');
     }
   };
