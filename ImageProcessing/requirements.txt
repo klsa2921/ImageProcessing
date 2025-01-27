@@ -1,0 +1,13 @@
+Flask
+flask_cors
+pytesseract
+pillow
+docling
+pdf2image
+
+easyocr
+torch
+
+
+
+

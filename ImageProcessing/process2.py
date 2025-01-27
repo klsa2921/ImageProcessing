@@ -6,6 +6,7 @@ import easyocr
 from docling.document_converter import DocumentConverter
 import pdf2image
 import os
+import json
 
 def preprocess_image(image):
     # Convert the image to grayscale if it is in RGB format
@@ -72,37 +73,50 @@ def extract_text_from_image_using_docling(image):
 def process_file(file_path):
     # Extract file extension
     file_extension = os.path.splitext(file_path)[1].lower()
-    text = ''
-    
+    result = {}
+
     if file_extension == '.pdf':
         # Convert PDF to images
         images = pdf2image.convert_from_path(file_path)
+        result['pages'] = []
 
-        for img in images:
+        for page_number, img in enumerate(images, start=1):
             img_np = np.array(img)
-            text += extract_text(img_np)
-    
+            output, model_used = extract_text(img_np)
+            result['pages'].append({
+                'page_number': page_number,
+                'model_used': model_used,
+                'extracted_text': output
+            })
+
     elif file_extension in ['.jpg', '.jpeg', '.png', '.bmp', '.gif']:
         # Handle image files directly
         img = Image.open(file_path)
-        text += extract_text(img)
+        output, model_used = extract_text(img)
+        result['image_path'] = file_path
+        result['model_used'] = model_used
+        result['extracted_text'] = output
 
     else:
         raise ValueError("Unsupported file type. Only image and PDF files are supported.")
-    
-    return text
+
+    return json.dumps(result, indent=4,ensure_ascii=False)
 
 def extract_text(image):
     text = ''
+    model_used = ''
     try:
         print("Extracting text using Tesseract...")
         text = extract_text_from_file_for_pytesseract(image)
+        model_used = 'Tesseract'
     except Exception as e:
         print(f"Error processing image with Tesseract (error: {str(e)}). Trying with EasyOCR...")
         try:
             text = extract_text_from_file_using_easyocr(image)
+            model_used = 'EasyOCR'
         except Exception as e:
             print(f"Error processing image with EasyOCR (error: {str(e)}). Trying with Docling...")
             text = extract_text_from_image_using_docling(image)
+            model_used = 'Docling'
     
-    return text
+    return text, model_used
