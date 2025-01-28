@@ -7,9 +7,6 @@ from docling.document_converter import DocumentConverter
 import pdf2image
 import os
 import json
-import fitz  # PyMuPDF
-
-pytesseract.pytesseract.tesseract_cmd = r'C:\Users\mmallikanti\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
 
 def preprocess_image(image):
     # Convert the image to grayscale if it is in RGB format
@@ -73,27 +70,24 @@ def extract_text_from_image_using_docling(image):
 
     return extracted_text
 
-def process_file(file_path, model):
+def process_file(file_path,model):
     # Extract file extension
     file_extension = os.path.splitext(file_path)[1].lower()
     result = {}
 
     if file_extension == '.pdf':
-        # Convert PDF to images using PyMuPDF
-        pdf_document = fitz.open(file_path)
+        # Convert PDF to images
+        images = pdf2image.convert_from_path(file_path)
         result['pages'] = []
 
-        for page_number in range(len(pdf_document)):
-            page = pdf_document.load_page(page_number)
-            pix = page.get_pixmap()
-            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        for page_number, img in enumerate(images, start=1):
             img_np = np.array(img)
             if model == 'default':
                 output, model_used = extract_text(img_np)
             else:
-                output, model_used = extract_text2(img_np, model)
+                output, model_used = extract_text2(img_np,model)
             result['pages'].append({
-                'page_number': page_number + 1,
+                'page_number': page_number,
                 'model_used': model_used,
                 'extracted_text': output
             })
@@ -104,7 +98,7 @@ def process_file(file_path, model):
         if model == 'default':
             output, model_used = extract_text(img)
         else:
-            output, model_used = extract_text2(img, model)
+            output, model_used = extract_text2(img,model)
         result['image_path'] = file_path
         result['model_used'] = model_used
         result['extracted_text'] = output
@@ -112,7 +106,9 @@ def process_file(file_path, model):
     else:
         raise ValueError("Unsupported file type. Only image and PDF files are supported.")
 
-    return json.dumps(result, indent=4, ensure_ascii=False)
+    return json.dumps(result, indent=4,ensure_ascii=False)
+
+
 
 def extract_text(image):
     text = ''
@@ -139,8 +135,6 @@ def extract_text2(image, model):
     model_used = ''
     try:
         if model == 'Tesseract':
-            if isinstance(image, np.ndarray):
-                image = Image.fromarray(image)
             print("Extracting text using Tesseract...")
             text = extract_text_from_file_for_pytesseract(image)
             model_used = 'model1'
@@ -158,3 +152,51 @@ def extract_text2(image, model):
         print(f"Error processing image with {model} (error: {str(e)}).")
     
     return text, model_used
+
+
+    # Try to identify the file type (PDF or image) from the byte data
+    file_extension = None
+    try:
+        # Check if the file is a PDF (by looking at the first few bytes)
+        if file_bytes[:4] == b'%PDF':
+            file_extension = '.pdf'
+        else:
+            # If it's not PDF, we assume it's an image file
+            img = Image.open(io.BytesIO(file_bytes))
+            file_extension = img.format.lower()
+    except Exception as e:
+        raise ValueError("Could not determine file type: " + str(e))
+
+    result = {}
+
+    if file_extension == '.pdf':
+        # Convert PDF to images
+        images = pdf2image.convert_from_bytes(file_bytes)
+        result['pages'] = []
+
+        for page_number, img in enumerate(images, start=1):
+            img_np = np.array(img)
+            if model == 'default':
+                output, model_used = extract_text(img_np)
+            else:
+                output, model_used = extract_text2(img_np, model)
+            result['pages'].append({
+                'page_number': page_number,
+                'model_used': model_used,
+                'extracted_text': output
+            })
+
+    elif file_extension in ['jpeg', 'png', 'jpg', 'bmp', 'gif']:
+        # Handle image files directly
+        img = Image.open(io.BytesIO(file_bytes))
+        if model == 'default':
+            output, model_used = extract_text(img)
+        else:
+            output, model_used = extract_text2(img, model)
+        result['model_used'] = model_used
+        result['extracted_text'] = output
+
+    else:
+        raise ValueError("Unsupported file type. Only image and PDF files are supported.")
+
+    return json.dumps(result, indent=4, ensure_ascii=False)

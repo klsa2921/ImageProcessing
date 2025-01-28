@@ -4,10 +4,11 @@ pytesseract
 pillow
 docling
 pdf2image
-
 easyocr
 torch
-
-
-
-
+transformers
+streamlit
+werkzeug
+fitz
+opencv-python 
+pillow
