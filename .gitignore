@@ -3,3 +3,5 @@
 
 /react/load-image-app/.idea
 /ImageProcessing/uploads
+/ImageProcessing/extraction/__pycache__
+/ImageProcessing/process_file/__pycache__

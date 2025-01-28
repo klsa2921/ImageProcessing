@@ -9,7 +9,7 @@ import os
 import json
 import fitz  # PyMuPDF
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Users\mmallikanti\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Users\mmallikanti\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
 
 def preprocess_image(image):
     # Convert the image to grayscale if it is in RGB format
@@ -37,6 +37,7 @@ def extract_text_from_file_for_pytesseract(image):
     return text
 
 def extract_text_from_file_using_easyocr(image):
+
     # Initialize the EasyOCR reader with the specified language
     reader = easyocr.Reader(['ar'])  # Language support (default Arabic)
 
@@ -87,11 +88,11 @@ def process_file(file_path, model):
             page = pdf_document.load_page(page_number)
             pix = page.get_pixmap()
             img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-            img_np = np.array(img)
+            # img_np = np.array(img) ## 
             if model == 'default':
-                output, model_used = extract_text(img_np)
+                output, model_used = extract_text(img)
             else:
-                output, model_used = extract_text2(img_np, model)
+                output, model_used = extract_text2(img, model)
             result['pages'].append({
                 'page_number': page_number + 1,
                 'model_used': model_used,
@@ -124,9 +125,11 @@ def extract_text(image):
     except Exception as e:
         print(f"Error processing image with Tesseract (error: {str(e)}). Trying with EasyOCR...")
         try:
+            
             text = extract_text_from_file_using_easyocr(image)
             model_used = 'model2'
         except Exception as e:
+            
             print(f"Error processing image with EasyOCR (error: {str(e)}). Trying with Docling...")
             text = extract_text_from_image_using_docling(image)
             model_used = 'model3'
@@ -139,8 +142,6 @@ def extract_text2(image, model):
     model_used = ''
     try:
         if model == 'Tesseract':
-            if isinstance(image, np.ndarray):
-                image = Image.fromarray(image)
             print("Extracting text using Tesseract...")
             text = extract_text_from_file_for_pytesseract(image)
             model_used = 'model1'
